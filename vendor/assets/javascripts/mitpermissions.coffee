@@ -160,6 +160,7 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
       type:   'radio'
       name:   'permission-chooser'
       label:  Annotator._t('Group')
+      value:  'Group'
       load:   createCallback('updatePermissionsField', 'read')
       submit: createCallback('updateAnnotationPermissions', 'read')
     })
@@ -168,16 +169,18 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
       type:   'radio'
       name:   'permission-chooser'
       label:  Annotator._t('Review')
-      load:   createCallback('updatePermissionsField', 'update')
-      submit: createCallback('updateAnnotationPermissions', 'update')
+      value:  'Review'
+      load:   createCallback('updatePermissionsField', 'read')
+      submit: createCallback('updateAnnotationPermissions', 'read')
     })
 
     @annotator.editor.addField({
       type:   'radio'
       name:   'permission-chooser'
       label:  Annotator._t('Private')
-      load:   createCallback('updatePermissionsField', 'update')
-      submit: createCallback('updateAnnotationPermissions', 'update')
+      value:  'Private'
+      load:   createCallback('updatePermissionsField', 'read')
+      submit: createCallback('updateAnnotationPermissions', 'read')
     })
 
     # Setup the display of annotations in the Viewer.
@@ -260,7 +263,7 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
     input = field.find('input').removeAttr('disabled')
 
     # Do not show field if current user is not admin.
-    field.hide() unless this.authorize('admin', annotation)
+    # field.hide() unless this.authorize('admin', annotation)
 
     # See if we can authorise without a user.
     if this.authorize(action, annotation || {}, null)
@@ -281,7 +284,7 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
   updateAnnotationPermissions: (type, field, annotation) =>
     annotation.permissions = @options.permissions unless annotation.permissions
 
-    dataKey = type + '-permissions'
+    # dataKey = type + '-permissions' # does not appear to be in use.
 
     if $(field).find('input').is(':checked')
       annotation.permissions[type] = []
