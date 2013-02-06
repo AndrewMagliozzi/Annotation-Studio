@@ -19,6 +19,113 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
   events:
     'beforeAnnotationCreated': 'addFieldsToAnnotation'
 
+  # A Object literal of default options for the class.
+  options:
+
+    # Displays an "Anyone can view this annotation" checkbox in the Editor.
+    showViewPermissionsCheckbox: false
+
+    # Displays an "Anyone can edit this annotation" checkbox in the Editor.
+    showEditPermissionsCheckbox: false
+
+    # Public: Used by the plugin to determine a unique id for the @user property.
+    # By default this accepts and returns the user String but can be over-
+    # ridden in the @options object passed into the constructor.
+    #
+    # user - A String username or null if no user is set.
+    #
+    # Returns the String provided as user object.
+    userId: (user) -> user
+
+    # Public: Used by the plugin to determine a display name for the @user
+    # property. By default this accepts and returns the user String but can be
+    # over-ridden in the @options object passed into the constructor.
+    #
+    # user - A String username or null if no user is set.
+    #
+    # Returns the String provided as user object
+    userString: (user) -> user
+
+    # Public: Used by Permissions#authorize to determine whether a user can
+    # perform an action on an annotation. Overriding this function allows
+    # a far more complex permissions sysyem.
+    #
+    # By default this authorizes the action if any of three scenarios are true:
+    #
+    #     1) the annotation has a 'permissions' object, and either the field for
+    #        the specified action is missing, empty, or contains the userId of the
+    #        current user, i.e. @options.userId(@user)
+    #
+    #     2) the annotation has a 'user' property, and @options.userId(@user) matches
+    #        'annotation.user'
+    #
+    #     3) the annotation has no 'permissions' or 'user' properties
+    #
+    # annotation - The annotation on which the action is being requested.
+    # action - The action being requested: e.g. 'update', 'delete'.
+    # user - The user object (or string) requesting the action. This is usually
+    #        automatically passed by Permissions#authorize as the current user (@user)
+    #
+    #   permissions.setUser(null)
+    #   permissions.authorize('update', {})
+    #   # => true
+    #
+    #   permissions.setUser('alice')
+    #   permissions.authorize('update', {user: 'alice'})
+    #   # => true
+    #   permissions.authorize('update', {user: 'bob'})
+    #   # => false
+    #
+    #   permissions.setUser('alice')
+    #   permissions.authorize('update', {
+    #     user: 'bob',
+    #     permissions: ['update': ['alice', 'bob']]
+    #   })
+    #   # => true
+    #   permissions.authorize('destroy', {
+    #     user: 'bob',
+    #     permissions: [
+    #       'update': ['alice', 'bob']
+    #       'destroy': ['bob']
+    #     ]
+    #   })
+    #   # => false
+    #
+    # Returns a Boolean, true if the user is authorised for the token provided.
+    userAuthorize: (action, annotation, user) ->
+      # Fine-grained custom authorization
+      if annotation.permissions
+        tokens = annotation.permissions[action] || []
+
+        if tokens.length == 0
+          # Empty or missing tokens array: anyone can perform action.
+          return true
+
+        for token in tokens
+          if this.userId(user) == token
+            return true
+
+        # No tokens matched: action should not be performed.
+        return false
+
+      # Coarse-grained authorization
+      else if annotation.user
+        return user and this.userId(user) == this.userId(annotation.user)
+
+      # No authorization info on annotation: free-for-all!
+      true
+
+    # Default user object.
+    user: ''
+
+    # Default permissions for all annotations. Anyone can do anything
+    # (assuming default userAuthorize function).
+    permissions: {
+      'read':   []
+      'update': []
+      'delete': []
+      'admin':  []
+    }
 
   # The constructor called when a new instance of the Permissions
   # plugin is created. See class documentation for usage.
@@ -44,6 +151,10 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
     self = this
     createCallback = (method, type) ->
       (field, annotation) -> self[method].call(self, type, field, annotation)
+
+    # Set up user and default permissions from auth token if none currently given
+    if !@user and @annotator.plugins.Auth
+      @annotator.plugins.Auth.withToken(this._setAuthFromToken)
 
     @annotator.editor.addField({
       type:   'radio'
@@ -168,10 +279,7 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
   #
   # Returns nothing.
   updateAnnotationPermissions: (type, field, annotation) =>
-    console.log type
-    # console.log field
-    # console.log annotation
-	annotation.permissions = @options.permissions unless annotation.permissions
+    annotation.permissions = @options.permissions unless annotation.permissions
 
     dataKey = type + '-permissions'
 
@@ -202,9 +310,8 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
     else
       field.remove()
 
-    if controls
-      controls.hideEdit()   unless this.authorize('update', annotation)
-      controls.hideDelete() unless this.authorize('delete', annotation)
+    controls.hideEdit()   unless this.authorize('update', annotation)
+    controls.hideDelete() unless this.authorize('delete', annotation)
 
   # Sets the Permissions#user property on the basis of a received authToken.
   #
@@ -213,3 +320,4 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
   # Returns nothing.
   _setAuthFromToken: (token) =>
     this.setUser(token.userId)
+
