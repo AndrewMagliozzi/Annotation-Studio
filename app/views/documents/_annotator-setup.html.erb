@@ -22,7 +22,7 @@
 <%= javascript_include_tag "sidebar" %>
 <script type="text/javascript" charset="utf-8">
 jQuery(function ($) {
-	var currentUser = serverExports.blah;
+	var currentUser = serverExports.current_user;
 	console.info(currentUser);
 	var groups = "<%= current_user.rep_group_list %>".split(/, /);
 
@@ -48,12 +48,12 @@ jQuery(function ($) {
 		prefix: '<%= ENV["API_URL"] %>',
 		annotationData: {
 			'uri': [location.protocol, '//', location.host, location.pathname].join(''),
-			// "groups": groups,
-			'user': {
-				'id': <%= current_user.id %>,
-				'username': "<%= current_user.first_name_last_initial %>",
-				'groups': groups,
-			}
+			"groups": groups,
+			// 'user': {
+			// 	'id': <%= current_user.id %>,
+			// 	'username': "<%= current_user.first_name_last_initial %>",
+			// 	// 'groups': groups,
+			// }
 		},
 		loadFromSearch: {
 			'limit': 1000,
