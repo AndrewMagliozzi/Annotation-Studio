@@ -251,9 +251,9 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
     else # userAuthorize nulled out: free-for-all!
       return true
 
-  # Field callback: Updates the state of the "anyone can…" checkboxes
+  # Field callback: Updates the state of the radio buttons
   #
-  # action     - The action String, either "view" or "update"
+  # action     - The action String, always "read" in our case
   # field      - A DOM Element containing a form input.
   # annotation - An annotation Object.
   #
@@ -273,10 +273,9 @@ class Annotator.Plugin.MITPermissions extends Annotator.Plugin.Permissions
 
 
   # Field callback: updates the annotation.permissions object based on the state
-  # of the field checkbox. If it is checked then permissions are set to world
-  # writable otherwise they use the original settings.
+  # of the permissions radio field. 
   #
-  # action     - The action String, either "view" or "update"
+  # action     - The action String, always "read" in our case
   # field      - A DOM Element representing the annotation editor.
   # annotation - An annotation Object.
   #
