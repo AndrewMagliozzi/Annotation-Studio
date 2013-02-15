@@ -2,7 +2,7 @@ development:
     DEFAULT_NEW_USER_GROUP: student
     GOOGLE_ANALYTICS_CODE: development 
     ENVIRONMENT_TAG: Development
-    API_URL: http://localhost:5000/api
+    API_URL: http://staging-annotations.herokuapp.com/api
     DEFAULT_USERS_CAN_CHOOSE_GROUPS: true
     DEFAULT_USERS_CAN_CONTROL_PERMISSIONS: true
     DEFAULT_USERS_CAN_CREATE_TEXTS: true
